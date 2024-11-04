@@ -53,4 +53,7 @@ tasks.test {
         // showCauses = true
         showStandardStreams = true
     }
+    tasks.jacocoTestReport {
+        reports { xml.required.set(true) }
+    }
 }
