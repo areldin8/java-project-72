@@ -2,72 +2,95 @@ package hexlet.code.repository;
 
 import hexlet.code.model.UrlCheck;
 
+
 import java.sql.SQLException;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.Statement;
+import java.sql.ResultSet;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class UrlCheckRepository extends BaseRepository {
-    public static void save(UrlCheck urlCheck) throws SQLException {
-        var sql = """
-                INSERT INTO url_checks (status_code, title, h1, description, url_id, created_at)
-                VALUES (?, ?, ?, ?, ?, ?)
-                """;
-        try (var conn = getDataSource().getConnection();
-             var preparedStatement = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-
-            preparedStatement.setInt(1, urlCheck.getStatusCode());
-            preparedStatement.setString(2, urlCheck.getTitle());
-            preparedStatement.setString(3, urlCheck.getH1());
-            preparedStatement.setString(4, urlCheck.getDescription());
-            preparedStatement.setLong(5, urlCheck.getUrlId());
-            var createdAt = LocalDateTime.now();
-            preparedStatement.setTimestamp(6, Timestamp.valueOf(createdAt));
-
-            int affectedRows = preparedStatement.executeUpdate();
-            if (affectedRows == 0) {
-                throw new SQLException("Saving UrlCheck failed, no rows affected.");
-            }
-
-            try (var generatedKeys = preparedStatement.getGeneratedKeys()) {
-                if (generatedKeys.next()) {
-                    urlCheck.setId(generatedKeys.getLong(1));
-                    urlCheck.setCreatedAt(Timestamp.valueOf(createdAt)); // Устанавливаем созданное время
-                } else {
-                    throw new SQLException("DB did not return an id after saving an entity");
-                }
+    public static void save(UrlCheck check) throws SQLException {
+        String sql = "INSERT INTO url_checks "
+                + "(status_code, title, h1, description, created_at, url_id) "
+                + "VALUES (?, ?, ?, ?, ?, ?)";
+        try (Connection connection = dataSource.getConnection();
+             PreparedStatement preparedStatement =
+                     connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            preparedStatement.setInt(1, check.getStatusCode());
+            preparedStatement.setString(2, check.getTitle());
+            preparedStatement.setString(3, check.getH1());
+            preparedStatement.setString(4, check.getDescription());
+            preparedStatement.setTimestamp(5, Timestamp.valueOf(check.getCreatedAt()));
+            preparedStatement.setLong(6, check.getUrlId());
+            preparedStatement.executeUpdate();
+            ResultSet generatedKeys = preparedStatement.getGeneratedKeys();
+            if (generatedKeys.next()) {
+                check.setId(generatedKeys.getLong(1));
+            } else {
+                throw new SQLException("DB have not returned an id after saving an entity");
             }
         }
     }
 
-    public static List<UrlCheck> getEntitiesByParentId(long urlId) throws SQLException {
-        var sql = "SELECT * FROM url_checks WHERE url_id = ? ORDER BY id DESC";
-
-        try (var conn = getDataSource().getConnection();
-             var stmt = conn.prepareStatement(sql)) {
-            stmt.setLong(1, urlId);
-            var resultSet = stmt.executeQuery();
-            var result = new ArrayList<UrlCheck>();
+    public static List<UrlCheck> getEntitiesByUrlId(Long urlId) throws SQLException {
+        String sql = "SELECT * FROM url_checks WHERE url_id = ? ORDER BY created_at";
+        try (Connection connection = dataSource.getConnection();
+             PreparedStatement preparedStatement =
+                     connection.prepareStatement(sql)) {
+            preparedStatement.setLong(1, urlId);
+            ResultSet resultSet = preparedStatement.executeQuery();
+            List<UrlCheck> result = new ArrayList<>();
             while (resultSet.next()) {
-                var id = resultSet.getLong("id");
-                var createdAt = resultSet.getTimestamp("created_at").toLocalDateTime();
-
-                var urlCheck = new UrlCheck(
-                        resultSet.getInt("status_code"),
-                        resultSet.getString("title"),
-                        resultSet.getString("h1"),
-                        resultSet.getString("description"),
-                        urlId // Устанавливаем urlId
-                );
-                urlCheck.setId(id);
-                urlCheck.setCreatedAt(Timestamp.valueOf(createdAt)); // Устанавливаем созданное время
-                result.add(urlCheck);
+                result.add(UrlCheck.builder()
+                        .id(resultSet.getLong("id"))
+                        .statusCode(resultSet.getInt("status_code"))
+                        .title(resultSet.getString("title"))
+                        .h1(resultSet.getString("description"))
+                        .createdAt(resultSet.getTimestamp("created_at").toLocalDateTime())
+                        .urlId(resultSet.getLong("url_id"))
+                        .build());
             }
             return result;
         }
     }
+
+    public static Map<Long, LocalDateTime> getDateTimeLastChecks() throws SQLException {
+        String sql = "SELECT * FROM url_checks ORDER BY created_at";
+        try (Connection connection = dataSource.getConnection();
+             PreparedStatement preparedStatement =
+                     connection.prepareStatement(sql)) {
+            ResultSet resultSet = preparedStatement.executeQuery();
+            Map<Long, LocalDateTime> result = new HashMap<>();
+            while (resultSet.next()) {
+                result.put(resultSet.getLong("url_id"),
+                        resultSet.getTimestamp("created_at").toLocalDateTime());
+            }
+            return result;
+        }
+    }
+
+    public static Map<Long, Integer> getStatusLastChecks() throws SQLException {
+        String sql = "SELECT * FROM url_checks ORDER BY created_at";
+        try (Connection connection = dataSource.getConnection();
+             PreparedStatement preparedStatement =
+                     connection.prepareStatement(sql)) {
+            ResultSet resultSet = preparedStatement.executeQuery();
+            Map<Long, Integer> result = new HashMap<>();
+            while (resultSet.next()) {
+                result.put(resultSet.getLong("url_id"),
+                        resultSet.getInt("status_code"));
+            }
+            return result;
+        }
+    }
+
 }
 
 
