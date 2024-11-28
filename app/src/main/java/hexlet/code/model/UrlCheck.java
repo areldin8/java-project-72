@@ -6,8 +6,13 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import lombok.Setter;
+import lombok.Getter;
+
 import java.time.LocalDateTime;
 
+@Getter
+@Setter
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -20,5 +25,13 @@ public class UrlCheck {
     private String description;
     private Long urlId;
     private LocalDateTime createdAt;
-}
 
+    public UrlCheck(long checkId, int statusCode, String title, String h1, LocalDateTime createdAt, long checkUrlId) {
+        this.id = checkId;
+        this.statusCode = statusCode;
+        this.title = title;
+        this.h1 = h1;
+        this.createdAt = createdAt;
+        this.urlId = checkUrlId;
+    }
+}

@@ -7,7 +7,9 @@ import hexlet.code.repository.UrlRepository;
 import hexlet.code.util.NamedRoutes;
 import io.javalin.http.Context;
 import io.javalin.http.NotFoundResponse;
-import org.jsoup.Connection;
+import kong.unirest.HttpResponse;
+import kong.unirest.JsonNode;
+import kong.unirest.Unirest;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -20,14 +22,22 @@ public class UrlChecksController {
         Long urlId = context.pathParamAsClass("id", Long.class).get();
         try {
             Url url = UrlRepository.findById(urlId).orElseThrow(NotFoundResponse::new);
-            Connection connection = Jsoup.connect(url.getName());
-            Document document = connection.get();
-            int statusCode = connection.response().statusCode();
+
+            HttpResponse<JsonNode> response = Unirest.get(url.getName())
+                    .header("accept", "application/json")
+                    .asJson();
+
+            int statusCode = response.getStatus();
+            String body = response.getBody().toString();
+
+            Document document = Jsoup.parse(body);
             String title = document.title();
             Element h1Element = document.selectFirst("h1");
             String h1 = (h1Element == null) ? "" : h1Element.text();
             Element descriptionElement = document.selectFirst("meta[name=description]");
             String description = (descriptionElement == null) ? "" : descriptionElement.attr("content");
+
+            // Сохраняем результаты проверки URL
             UrlCheckRepository.save(UrlCheck.builder()
                     .statusCode(statusCode)
                     .title(title)
@@ -42,6 +52,7 @@ public class UrlChecksController {
             context.sessionAttribute("flash", "Ссылка не работает: " + e.getMessage());
         } finally {
             context.redirect(NamedRoutes.urlPath(urlId));
+            Unirest.shutDown();
         }
     }
 }

@@ -4,7 +4,6 @@ import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import gg.jte.ContentType;
 import gg.jte.TemplateEngine;
-import hexlet.code.controller.RootController;
 import hexlet.code.controller.UrlChecksController;
 import hexlet.code.controller.UrlsController;
 import hexlet.code.repository.BaseRepository;
@@ -26,48 +25,10 @@ import java.util.stream.Collectors;
 
 @Slf4j
 public class App {
-    public static void main(String[] args) throws IOException, SQLException {
-        var app = getApp();
-        app.start(getPort());
-    }
 
     private static int getPort() {
         String port = System.getenv().getOrDefault("PORT", "7070");
         return Integer.parseInt(port);
-    }
-
-    public static Javalin getApp() throws IOException, SQLException {
-
-        //load dataSource
-        HikariConfig hikariConfig = new HikariConfig();
-        hikariConfig.setJdbcUrl(System.getenv()
-                .getOrDefault("JDBC_DATABASE_URL", "jdbc:h2:mem:project;DB_CLOSE_DELAY=-1;"));
-
-        HikariDataSource dataSource = new HikariDataSource(hikariConfig);
-        String sql = readResourceFile("schema.sql");
-        try (Connection connection = dataSource.getConnection();
-             Statement statement = connection.createStatement()) {
-            statement.execute(sql);
-        } catch (SQLException e) {
-            log.error("Failed to initialize the database schema.", e);
-            throw e; // rethrow or handle as needed
-        }
-
-        BaseRepository.dataSource = dataSource;
-
-        //create javalin
-        var app = Javalin.create(config -> {
-            config.bundledPlugins.enableDevLogging();
-            config.fileRenderer(new JavalinJte(createTemplateEngine()));
-        });
-
-        app.get(NamedRoutes.rootPath(), RootController::index);
-        app.post(NamedRoutes.urlsPath(), UrlsController::create);
-        app.get(NamedRoutes.urlsPath(), UrlsController::index);
-        app.get(NamedRoutes.urlPath("{id}"), UrlsController::show);
-        app.post(NamedRoutes.urlChecksPath("{id}"), UrlChecksController::create);
-
-        return app;
     }
 
     public static String readResourceFile(String fileName) throws IOException {
@@ -84,7 +45,63 @@ public class App {
         return TemplateEngine.create(codeResolver, ContentType.Html);
     }
 
+
+    public static void main(String[] args) throws IOException, SQLException {
+        var app = getApp();
+
+        app.start(getPort());
+    }
+
+
+    public static Javalin getApp() throws IOException, SQLException {
+        HikariConfig hikariConfig = new HikariConfig();
+        hikariConfig.setJdbcUrl(System.getenv()
+                .getOrDefault("JDBC_DATABASE_URL", "jdbc:h2:mem:project;DB_CLOSE_DELAY=-1;"));
+
+        HikariDataSource dataSource = new HikariDataSource(hikariConfig);
+        String sql = readResourceFile("schema.sql");
+
+
+        try (Connection connection = dataSource.getConnection();
+             Statement statement = connection.createStatement()) {
+            statement.execute(sql);
+        } catch (SQLException e) {
+            log.error("Failed to initialize the database schema.", e);
+            throw e;
+        }
+
+        BaseRepository.dataSource = dataSource;
+
+
+        var app = Javalin.create(config -> {
+            config.bundledPlugins.enableDevLogging();
+            config.fileRenderer(new JavalinJte(createTemplateEngine()));
+        });
+
+
+        app.before(ctx -> {
+            ctx.contentType("text/html; charset=utf-8");
+        });
+
+
+        app.get(NamedRoutes.rootPath(), UrlsController::build);
+        app.post(NamedRoutes.urlsPath(), UrlsController::create);
+        app.get(NamedRoutes.urlsPath(), UrlsController::index);
+        app.get(NamedRoutes.urlPath("{id}"), UrlsController::show);
+        app.post(NamedRoutes.urlChecksPath("{id}"), UrlChecksController::create);
+
+
+        app.exception(Exception.class, (e, ctx) -> {
+            log.error("Unhandled exception", e);
+            ctx.status(500).result("Internal Server Error");
+        });
+
+        return app;
+    }
 }
+
+
+
 
 
 

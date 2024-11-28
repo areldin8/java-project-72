@@ -6,9 +6,13 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import lombok.Getter;
+import lombok.Setter;
+
 import java.time.LocalDateTime;
 
-
+@Getter
+@Setter
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -20,6 +24,7 @@ public class Url {
 
     public Url(String name) {
         this.name = name;
+        this.createdAt = LocalDateTime.now();
     }
 }
 

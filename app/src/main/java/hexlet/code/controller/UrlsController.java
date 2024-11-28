@@ -1,5 +1,6 @@
 package hexlet.code.controller;
 
+import hexlet.code.dto.LinkPage;
 import hexlet.code.dto.UrlPage;
 import hexlet.code.dto.UrlsPage;
 import hexlet.code.model.Url;
@@ -12,9 +13,48 @@ import java.net.URI;
 import java.net.URL;
 import java.sql.SQLException;
 
+import io.javalin.http.NotFoundResponse;
 import static io.javalin.rendering.template.TemplateUtil.model;
 
 public class UrlsController {
+
+    public static void build(Context context) {
+        var page = new LinkPage();
+        page.setFlash(context.consumeSessionAttribute("flash"));
+        page.setLink(context.consumeSessionAttribute("link"));
+        context.render("build.jte", model("page", page));
+    }
+
+    public static void index(Context context) {
+        UrlsPage page = new UrlsPage();
+        try {
+            page.setUrls(UrlRepository.getEntities());
+            page.setLastChecks(UrlCheckRepository.getDateTimeLastChecks());
+            page.setLastStatus(UrlCheckRepository.getStatusLastChecks());
+        } catch (SQLException e) {
+            page.setFlash("Ошибка в работе СУБД");
+        } finally {
+            context.render("urls/index.jte", model("page", page));
+        }
+    }
+
+    public static void show(Context context) {
+        UrlPage page = new UrlPage();
+        try {
+            Long id = context.pathParamAsClass("id", Long.class).get();
+            page.setUrl(UrlRepository.findById(id)
+                    .orElseThrow(() -> new NotFoundResponse("URL с id = " + id + " не найден")));
+            page.setUrlChecks(UrlCheckRepository.getEntitiesByUrlId(id));
+        } catch (SQLException e) {
+            context.sessionAttribute("flash", "Ошибка в работе СУБД: " + e.getMessage());
+        } catch (Exception e) {
+            context.sessionAttribute("flash", "Указан несуществующий id");
+        } finally {
+            page.setFlash(context.consumeSessionAttribute("flash"));
+            context.render("urls/show.jte", model("page", page));
+        }
+    }
+
     public static void create(Context context) {
         String link = context.formParamAsClass("url", String.class).get().toLowerCase().trim();
         context.sessionAttribute("link", link);
@@ -37,35 +77,6 @@ public class UrlsController {
         } catch (Exception e) {
             context.sessionAttribute("flash", "Неверная ссылка");
             context.redirect(NamedRoutes.rootPath());
-        }
-    }
-
-    public static void index(Context context) {
-        UrlsPage page = new UrlsPage();
-        try {
-            page.setUrls(UrlRepository.getEntities());
-            page.setLastChecks(UrlCheckRepository.getDateTimeLastChecks());
-            page.setLastStatus(UrlCheckRepository.getStatusLastChecks());
-        } catch (SQLException e) {
-            page.setFlash("Ошибка в работе СУБД");
-        } finally {
-            context.render("urls/build.jte", model("page", page));
-        }
-    }
-
-    public static void show(Context context) {
-        UrlPage page = new UrlPage();
-        try {
-            Long id = context.pathParamAsClass("id", Long.class).get();
-            page.setUrl(UrlRepository.findById(id).orElseThrow(Exception::new));
-            page.setUrlChecks(UrlCheckRepository.getEntitiesByUrlId(id));
-        } catch (SQLException e) {
-            context.sessionAttribute("flash", "Ошибка в работе СУБД: " + e.getMessage());
-        } catch (Exception e) {
-            context.sessionAttribute("flash", "Указан несуществующий id");
-        } finally {
-            page.setFlash(context.consumeSessionAttribute("flash"));
-            context.render("urls/show.jte", model("page", page));
         }
     }
 }

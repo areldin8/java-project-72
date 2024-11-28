@@ -16,7 +16,7 @@ content = @`
                     <div class="row justify-content-center">
 
                         <div class="row">
-                            <h2>Список добавленных сайтов:</h2>
+                            <h2>Список добавленных сайтов</h2>
                         </div>
 
                         <div class="row">
