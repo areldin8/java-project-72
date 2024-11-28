@@ -59,7 +59,7 @@ public class UrlCheckRepository extends BaseRepository {
                 var createdAt = resultSet.getTimestamp("created_at").toLocalDateTime();
                 var checkUrlId = resultSet.getLong("url_id");
 
-                var urlCheck = new UrlCheck(checkId,statusCode,title,h1,createdAt,checkUrlId);
+                var urlCheck = new UrlCheck(checkId, statusCode, title, h1, createdAt, checkUrlId);
                 urlCheck.setId(checkId);
                 result.add(urlCheck);
             }
@@ -68,7 +68,7 @@ public class UrlCheckRepository extends BaseRepository {
     }
 
     public static Map<Long, LocalDateTime> getDateTimeLastChecks() throws SQLException {
-        String sql = "SELECT url_id, created_at FROM url_checks ORDER BY created_at"; // Уточнено, чтобы выбирать только нужные поля
+        String sql = "SELECT url_id, created_at FROM url_checks ORDER BY created_at";
         try (var connection = dataSource.getConnection();
              var preparedStatement = connection.prepareStatement(sql)) {
 

@@ -41,7 +41,7 @@ public class AppTest {
         mockWebServer.start();
         mockServerUrl = mockWebServer.url("/").toString();
 
-        String mockServerBody = "<html><head><title>Test Title</title></head><body></body></html>";;
+        String mockServerBody = "<html><head><title>Test Title</title></head><body></body></html>";
         mockWebServer.enqueue(new MockResponse().setBody(mockServerBody).setResponseCode(200));
     }
 
@@ -123,7 +123,8 @@ public class AppTest {
         try {
             UrlRepository.save(Url.builder().name(mockServerUrl).build());
         } catch (SQLException exception) {
-            throw new AssertionError("Failed to save URL: " + exception.getMessage()); }
+            throw new AssertionError("Failed to save URL: " + exception.getMessage());
+        }
 
         JavalinTest.test(app, (server, client) -> {
             Url url = UrlRepository.findByName(mockServerUrl).orElseThrow(() -> new AssertionError("URL not found"));
