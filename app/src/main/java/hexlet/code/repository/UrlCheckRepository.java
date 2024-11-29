@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 
 public class UrlCheckRepository extends BaseRepository {
+
     public static void save(UrlCheck check) throws SQLException {
         String sql = "INSERT INTO url_checks "
                 + "(status_code, title, h1, description, created_at, url_id) "

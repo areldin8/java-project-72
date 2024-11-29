@@ -31,10 +31,12 @@ public class UrlsController {
             page.setUrls(UrlRepository.getEntities());
             page.setLastChecks(UrlCheckRepository.getDateTimeLastChecks());
             page.setLastStatus(UrlCheckRepository.getStatusLastChecks());
+
+            // Если все прошло успешно, рендерим страницу
+            context.render("urls/index.jte", model("page", page));
         } catch (SQLException e) {
             page.setFlash("Ошибка в работе СУБД");
-        } finally {
-            context.render("urls/index.jte", model("page", page));
+            context.render("urls/index.jte", model("page", page)); // Рендерим страницу с сообщением об ошибке
         }
     }
 
@@ -45,13 +47,18 @@ public class UrlsController {
             page.setUrl(UrlRepository.findById(id)
                     .orElseThrow(() -> new NotFoundResponse("URL с id = " + id + " не найден")));
             page.setUrlChecks(UrlCheckRepository.getEntitiesByUrlId(id));
-        } catch (SQLException e) {
-            context.sessionAttribute("flash", "Ошибка в работе СУБД: " + e.getMessage());
-        } catch (Exception e) {
-            context.sessionAttribute("flash", "Указан несуществующий id");
-        } finally {
+
+            // Рендерим страницу, если все прошло успешно
             page.setFlash(context.consumeSessionAttribute("flash"));
             context.render("urls/show.jte", model("page", page));
+        } catch (SQLException e) {
+            context.sessionAttribute("flash", "Ошибка в работе СУБД: " + e.getMessage());
+            page.setFlash(context.consumeSessionAttribute("flash"));
+            context.render("urls/show.jte", model("page", page)); // Рендерим страницу с сообщением об ошибке
+        } catch (Exception e) {
+            context.sessionAttribute("flash", "Указан несуществующий id");
+            page.setFlash(context.consumeSessionAttribute("flash"));
+            context.render("urls/show.jte", model("page", page)); // Рендерим страницу с сообщением об ошибке
         }
     }
 

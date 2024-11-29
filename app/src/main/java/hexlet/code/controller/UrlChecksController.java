@@ -8,34 +8,29 @@ import hexlet.code.util.NamedRoutes;
 import io.javalin.http.Context;
 import io.javalin.http.NotFoundResponse;
 import kong.unirest.HttpResponse;
-import kong.unirest.JsonNode;
 import kong.unirest.Unirest;
+import kong.unirest.UnirestException;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
 
 import java.sql.SQLException;
 import java.time.LocalDateTime;
 
 public class UrlChecksController {
-    public static void create(Context context) {
+
+    public static void create(Context context) throws SQLException {
         Long urlId = context.pathParamAsClass("id", Long.class).get();
+        Url url = UrlRepository.findById(urlId)
+                .orElseThrow(() -> new NotFoundResponse("Url with id" + urlId + "not found"));
+
         try {
-            Url url = UrlRepository.findById(urlId).orElseThrow(NotFoundResponse::new);
+            HttpResponse<String> response = Unirest.get(url.getName()).asString();
 
-            HttpResponse<JsonNode> response = Unirest.get(url.getName())
-                    .header("accept", "application/json")
-                    .asJson();
-
+            Document document = Jsoup.parse(response.getBody());
             int statusCode = response.getStatus();
-            String body = response.getBody().toString();
-
-            Document document = Jsoup.parse(body);
             String title = document.title();
-            Element h1Element = document.selectFirst("h1");
-            String h1 = (h1Element == null) ? "" : h1Element.text();
-            Element descriptionElement = document.selectFirst("meta[name=description]");
-            String description = (descriptionElement == null) ? "" : descriptionElement.attr("content");
+            String h1 = document.select("h1").text();
+            String description = document.select("meta[name=description]").attr("content");
 
             // Сохраняем результаты проверки URL
             UrlCheckRepository.save(UrlCheck.builder()
@@ -46,14 +41,25 @@ public class UrlChecksController {
                     .createdAt(LocalDateTime.now())
                     .urlId(urlId)
                     .build());
+
+            // Успешное сообщение
+            context.sessionAttribute("flash", "Страница успешно проверена");
+            context.sessionAttribute("flashType", "success");
+
+        } catch (UnirestException e) {
+            context.sessionAttribute("flash", "Некорректный адрес");
+            context.sessionAttribute("flashType", "danger");
         } catch (SQLException e) {
             context.sessionAttribute("flash", "Ошибка в работе СУБД: " + e.getMessage());
+            context.sessionAttribute("flashType", "danger");
         } catch (Exception e) {
-            context.sessionAttribute("flash", "Ссылка не работает: " + e.getMessage());
-        } finally {
-            context.redirect(NamedRoutes.urlPath(urlId));
-            Unirest.shutDown();
+            context.sessionAttribute("flash", "Произошла ошибка: " + e.getMessage());
+            context.sessionAttribute("flashType", "danger");
         }
+
+        // Перенаправляем пользователя
+        context.redirect(NamedRoutes.urlPath(urlId));
+        Unirest.shutDown(); // Закрываем Unirest
     }
 }
 

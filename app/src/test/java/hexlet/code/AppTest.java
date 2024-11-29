@@ -1,7 +1,9 @@
 package hexlet.code;
 
 import hexlet.code.model.Url;
+import hexlet.code.model.UrlCheck;
 import hexlet.code.repository.BaseRepository;
+import hexlet.code.repository.UrlCheckRepository;
 import hexlet.code.repository.UrlRepository;
 import hexlet.code.util.NamedRoutes;
 
@@ -21,8 +23,11 @@ import org.junit.jupiter.api.Assertions;
 import java.io.IOException;
 
 import java.sql.SQLException;
+import java.util.List;
 
+import static hexlet.code.App.readResourceFile;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.assertj.core.api.Assertions.assertThat;
 
 
 public class AppTest {
@@ -38,11 +43,9 @@ public class AppTest {
     @BeforeAll
     public static void startMockServer() throws Exception {
         mockWebServer = new MockWebServer();
-        mockWebServer.start();
         mockServerUrl = mockWebServer.url("/").toString();
-
-        String mockServerBody = "<html><head><title>Test Title</title></head><body></body></html>";
-        mockWebServer.enqueue(new MockResponse().setBody(mockServerBody).setResponseCode(200));
+        MockResponse mockResponse = new MockResponse().setBody(readResourceFile("test.html"));
+        mockWebServer.enqueue(mockResponse);
     }
 
     @AfterAll
@@ -51,12 +54,8 @@ public class AppTest {
     }
 
     @BeforeEach
-    public final void setUp() {
-        try {
-            app = App.getApp();
-        } catch (Exception e) {
-            System.out.println("test exception: " + e.getMessage());
-        }
+    public final void setUp() throws SQLException, IOException {
+        app = App.getApp();
     }
 
     @AfterEach
@@ -119,29 +118,29 @@ public class AppTest {
     }
 
     @Test
-    public void testUrlChecks() {
-        try {
-            UrlRepository.save(Url.builder().name(mockServerUrl).build());
-        } catch (SQLException exception) {
-            throw new AssertionError("Failed to save URL: " + exception.getMessage());
-        }
+
+    public void testUrlChecks() throws SQLException {
+        Url url = new Url(mockServerUrl);
+        UrlRepository.save(url);
 
         JavalinTest.test(app, (server, client) -> {
-            Url url = UrlRepository.findByName(mockServerUrl).orElseThrow(() -> new AssertionError("URL not found"));
+            try (var response = client.post(NamedRoutes.urlChecksPath(url.getId()))) {
+                assertThat(response.code()).isEqualTo(200);
 
-            var addCheckResponse = client.post(NamedRoutes.urlChecksPath(url.getId()));
+                List<UrlCheck> checks = UrlCheckRepository.getEntitiesByUrlId(url.getId());
+                assertThat(checks).isNotEmpty();
 
-            Assertions.assertEquals(200, addCheckResponse.code(), "Expected status code 200");
-
-            String responseBody = addCheckResponse.body().string();
-            Assertions.assertNotNull(responseBody, "Response body should not be null");
-
-//            Assertions.assertTrue(responseBody.contains("Test Title"), "Response body should contain 'Test Title'");
-
+                UrlCheck check = checks.get(0);
+                assertThat(check.getTitle()).isEqualTo("Test Title");
+            } catch (final Exception th) {
+                Assertions.fail("Exception occurred: " + th.getMessage());
+            }
         });
-
     }
+
 }
+
+
 
 
 
