@@ -33,7 +33,7 @@ content = @`
                                 </tr>
                                 <tr>
                                     <td>Добавлена</td>
-                                    <td>${Utils.formatDate(page.getUrl().getCreatedAt().toString())}</td>
+                                    <td>${Utils.formatDate(page.getUrl().getCreatedAt())}</td>
                                 </tr>
                                 <tr>
                                     <td>Проверок</td>
@@ -66,7 +66,7 @@ content = @`
                                             <td>${urlCheck.getTitle()}</td>
                                             <td>${urlCheck.getH1()}</td>
                                             <td>${urlCheck.getDescription()}</td>
-                                            <td>${Utils.formatDate(urlCheck.getCreatedAt().toString())}</td>
+                                            <td>${Utils.formatDate(urlCheck.getCreatedAt())}</td>
                                         </tr>
                                     @endfor
                                     </tbody>

@@ -34,7 +34,7 @@ content = @`
                                     <tr>
                                         <td><a href="${NamedRoutes.urlPath(url.getId())}">${url.getId()}</a></td>
                                         <td>${url.getName()}</td>
-                                        <td>${Utils.formatDate(url.getCreatedAt().toString())}</td>
+                                        <td>${Utils.formatDate(url.getCreatedAt())}</td>
                                         <td>
                                             @if (page.getLastChecks().get(url.getId()) == null)
                                                 Проверок не было
