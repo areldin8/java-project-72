@@ -46,10 +46,6 @@
     </main>
 </div>
 
-<footer class="footer border-top py-3 mt-5 bg-light">
-    <div class="container text-center">
-        <span class="text-muted">© 2024 Анализатор страниц</span>
-    </div>
-</footer>
+
 </body>
 </html>
