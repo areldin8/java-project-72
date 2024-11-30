@@ -27,10 +27,7 @@ public class Url {
         this.name = name;
         this.createdAt = LocalDateTime.now();
     }
-
-    public String getFormattedCreatedAt() {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
-        return createdAt.format(formatter);
-    }
 }
+
+
 
