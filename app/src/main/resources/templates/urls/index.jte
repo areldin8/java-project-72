@@ -9,56 +9,56 @@
 page = page,
 content = @`
 
-    <div>
+    <div class="container mt-5">
         @if (page.getUrls() != null)
 
-            <div class="container">
-                <div class="row">
-                    <div class="row justify-content-center">
+            <div class="text-center mb-4">
+                <h2>Список добавленных сайтов</h2>
+            </div>
 
-                        <div class="row">
-                            <h2>Список добавленных сайтов</h2>
-                        </div>
-
-                        <div class="row">
-                            <table class="table">
-                                <thead>
-                                <th>ID</th>
-                                <th>Ссылка</th>
-                                <th>Добавлена</th>
-                                <th>Последняя проверка</th>
-                                <th>Статус</th>
-                                </thead>
-                                <tbody>
-                                @for (Url url : page.getUrls())
-                                    <tr>
-                                        <td><a href="${NamedRoutes.urlPath(url.getId())}">${url.getId()}</a></td>
-                                        <td>${url.getName()}</td>
-                                        <td>${Utils.formatDate(url.getCreatedAt())}</td>
-                                        <td>
-                                            @if (page.getLastChecks().get(url.getId()) == null)
-                                                Проверок не было
-                                            @else
-                                                ${page.getLastChecks().get(url.getId()).toString()}
-                                            @endif
-                                        </td>
-                                        <td>
-                                            @if (page.getLastStatus().get(url.getId()) == null)
-                                                Проверок не было
-                                            @else
-                                                ${page.getLastStatus().get(url.getId()).toString()}
-                                            @endif
-                                        </td>
-                                    </tr>
-                                @endfor
-                                </tbody>
-                            </table>
-                        </div>
-
-                    </div>
+            <div class="card">
+                <div class="card-body">
+                    <table class="table table-striped">
+                        <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Ссылка</th>
+                            <th>Добавлена</th>
+                            <th>Последняя проверка</th>
+                            <th>Статус</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        @for (Url url : page.getUrls())
+                            <tr>
+                                <td><a href="${NamedRoutes.urlPath(url.getId())}">${url.getId()}</a></td>
+                                <td>${url.getName()}</td>
+                                <td>${Utils.formatDate(url.getCreatedAt())}</td>
+                                <td>
+                                    @if (page.getLastChecks().get(url.getId()) == null)
+                                        <span class="text-muted">Проверок не было</span>
+                                    @else
+                                        ${page.getLastChecks().get(url.getId()).toString()}
+                                    @endif
+                                </td>
+                                <td>
+                                    @if (page.getLastStatus().get(url.getId()) == null)
+                                        <span class="text-muted">Проверок не было</span>
+                                    @else
+                                        ${page.getLastStatus().get(url.getId()).toString()}
+                                    @endif
+                                </td>
+                            </tr>
+                        @endfor
+                        </tbody>
+                    </table>
                 </div>
             </div>
 
+        @else
+            <div class="alert alert-info" role="alert">
+                Нет добавленных сайтов.
+            </div>
         @endif
     </div>
 `

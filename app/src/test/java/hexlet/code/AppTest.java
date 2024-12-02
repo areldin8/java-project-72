@@ -77,6 +77,7 @@ public class AppTest {
     }
 
     @Test
+
     public void testUrlsPage() {
         JavalinTest.test(app, (server, client) -> {
             var response = client.get(NamedRoutes.urlsPath());
@@ -85,6 +86,7 @@ public class AppTest {
             Assertions.assertTrue(response.body().string()
                     .contains(strToUtf8("Список добавленных сайтов")));
         });
+
     }
 
     @Test
