@@ -12,8 +12,8 @@ content = @`
     <div class="container mt-5">
         @if (page.getUrls() != null)
 
-            <div class="text-center mb-4">
-                <h2>Список добавленных сайтов</h2>
+            <div class="text-left mb-4">
+                <h2>Сайты</h2>
             </div>
 
             <div class="card">
