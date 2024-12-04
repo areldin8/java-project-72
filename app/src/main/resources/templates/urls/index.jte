@@ -9,7 +9,7 @@
 page = page,
 content = @`
 
-    <div class="container mt-5">
+    <div class="container-fluid mt-5">
         @if (page.getUrls() != null)
 
             <div class="text-left mb-4">

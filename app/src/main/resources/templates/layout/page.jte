@@ -34,7 +34,7 @@
     </div>
 </nav>
 
-<div class="container mt-3">
+<div class="container-fluid mt-3">
     @if (page != null && page.getFlash() != null)
         <div class="alert alert-info">
             ${page.getFlash()}
