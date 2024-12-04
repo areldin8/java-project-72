@@ -84,7 +84,7 @@ public class AppTest {
             Assertions.assertEquals(response.code(), 200);
             assert response.body() != null;
             Assertions.assertTrue(response.body().string()
-                    .contains(strToUtf8("Список добавленных сайтов")));
+                    .contains(strToUtf8("Сайты")));
         });
 
     }
