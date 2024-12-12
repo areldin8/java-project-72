@@ -6,4 +6,6 @@
 
 ![Build Status](https://github.com/areldin8/java-project-72/actions/workflows/build.yml/badge.svg)
 
-## **[![Page Analyzer](https://java-project-72-f4b2.onrender.com)](https://java-project-72-f4b2.onrender.com)**
+### **Ссылка на приложение**
+
+https://java-project-72-f4b2.onrender.com
