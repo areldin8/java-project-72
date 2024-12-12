@@ -34,4 +34,11 @@ public class UrlCheck {
         this.createdAt = createdAt;
         this.urlId = checkUrlId;
     }
+
+    public UrlCheck(Integer statusCode, LocalDateTime createdAt) {
+        this.statusCode = statusCode;
+        this.createdAt = createdAt;
+    }
 }
+
+

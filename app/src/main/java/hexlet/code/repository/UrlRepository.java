@@ -22,14 +22,14 @@ public class UrlRepository extends BaseRepository {
              var preparedStatement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             preparedStatement.setString(1, url.getName());
 
-            var createdAt = LocalDateTime.now(); // Получаем текущее время
-            url.setCreatedAt(createdAt); // Устанавливаем время создания в объекте Url
-            preparedStatement.setTimestamp(2, Timestamp.valueOf(createdAt)); // Устанавливаем время в PreparedStatement
+            var createdAt = LocalDateTime.now();
+            url.setCreatedAt(createdAt);
+            preparedStatement.setTimestamp(2, Timestamp.valueOf(createdAt));
 
-            preparedStatement.executeUpdate(); // Выполняем обновление
-            var generatedKeys = preparedStatement.getGeneratedKeys(); // Получаем сгенерированные ключи
+            preparedStatement.executeUpdate();
+            var generatedKeys = preparedStatement.getGeneratedKeys();
             if (generatedKeys.next()) {
-                url.setId(generatedKeys.getLong(1)); // Устанавливаем сгенерированный id в объекте Url
+                url.setId(generatedKeys.getLong(1));
             } else {
                 throw new SQLException("DB have not returned an id after saving an entity");
             }
@@ -73,7 +73,7 @@ public class UrlRepository extends BaseRepository {
                 var name = resultSet.getString("name");
                 var createdAt = resultSet.getTimestamp("created_at").toLocalDateTime();
 
-                var url = new Url(name); // Предполагается, что у Url есть конструктор, принимающий name
+                var url = new Url(name);
                 url.setId(urlId);
                 url.setCreatedAt(createdAt);
                 return Optional.of(url);

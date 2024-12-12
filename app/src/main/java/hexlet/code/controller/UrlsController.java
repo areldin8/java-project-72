@@ -9,9 +9,14 @@ import hexlet.code.repository.UrlRepository;
 import hexlet.code.util.NamedRoutes;
 import io.javalin.http.Context;
 
+import java.net.MalformedURLException;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.sql.SQLException;
+
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import io.javalin.http.NotFoundResponse;
 import static io.javalin.rendering.template.TemplateUtil.model;
@@ -29,14 +34,15 @@ public class UrlsController {
         UrlsPage page = new UrlsPage();
         try {
             page.setUrls(UrlRepository.getEntities());
-            page.setLastChecks(UrlCheckRepository.getDateTimeLastChecks());
-            page.setLastStatus(UrlCheckRepository.getStatusLastChecks());
+            var lastChecks = UrlCheckRepository.getLastChecks();
+            Map<Long, Integer> lastStatus = lastChecks.entrySet().stream()
+                    .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().getStatusCode()));
+            page.setLastStatus(lastStatus);
 
-            // Если все прошло успешно, рендерим страницу
             context.render("urls/index.jte", model("page", page));
         } catch (SQLException e) {
             page.setFlash("Ошибка в работе СУБД");
-            context.render("urls/index.jte", model("page", page)); // Рендерим страницу с сообщением об ошибке
+            context.render("urls/index.jte", model("page", page));
         }
     }
 
@@ -48,41 +54,51 @@ public class UrlsController {
                     .orElseThrow(() -> new NotFoundResponse("URL с id = " + id + " не найден")));
             page.setUrlChecks(UrlCheckRepository.getEntitiesByUrlId(id));
 
-            // Рендерим страницу, если все прошло успешно
             page.setFlash(context.consumeSessionAttribute("flash"));
             context.render("urls/show.jte", model("page", page));
         } catch (SQLException e) {
             context.sessionAttribute("flash", "Ошибка в работе СУБД: " + e.getMessage());
             page.setFlash(context.consumeSessionAttribute("flash"));
-            context.render("urls/show.jte", model("page", page)); // Рендерим страницу с сообщением об ошибке
+            context.render("urls/show.jte", model("page", page));
         } catch (Exception e) {
             context.sessionAttribute("flash", "Указан несуществующий id");
             page.setFlash(context.consumeSessionAttribute("flash"));
-            context.render("urls/show.jte", model("page", page)); // Рендерим страницу с сообщением об ошибке
+            context.render("urls/show.jte", model("page", page));
         }
     }
 
     public static void create(Context context) {
         String link = context.formParamAsClass("url", String.class).get().toLowerCase().trim();
         context.sessionAttribute("link", link);
+
         try {
             URL linkUrl = new URI(link).toURL();
             link = linkUrl.getProtocol() + "://" + linkUrl.getHost()
                     + (linkUrl.getPort() != -1 ? ":" + linkUrl.getPort() : "");
+        } catch (URISyntaxException e) {
+            context.sessionAttribute("flash", "Неверный формат ссылки");
+            context.redirect(NamedRoutes.rootPath());
+            return;
+        } catch (MalformedURLException e) {
+            context.sessionAttribute("flash", "Неверная ссылка");
+            context.redirect(NamedRoutes.rootPath());
+            return;
+        }
+        try {
             if (UrlRepository.findByName(link).isPresent()) {
                 context.sessionAttribute("flash", "Ссылка уже содержится");
                 context.redirect(NamedRoutes.rootPath());
-            } else {
-                UrlRepository.save(new Url(link));
-                context.sessionAttribute("flash", "Ссылка успешно добавлена");
-                context.consumeSessionAttribute("link");
-                context.redirect(NamedRoutes.urlsPath());
+                return;
             }
+            UrlRepository.save(new Url(link));
+            context.sessionAttribute("flash", "Ссылка успешно добавлена");
+            context.consumeSessionAttribute("link");
+            context.redirect(NamedRoutes.urlsPath());
         } catch (SQLException e) {
             context.sessionAttribute("flash", "Ошибка в работе СУБД");
             context.redirect(NamedRoutes.rootPath());
         } catch (Exception e) {
-            context.sessionAttribute("flash", "Неверная ссылка");
+            context.sessionAttribute("flash", "Произошла ошибка");
             context.redirect(NamedRoutes.rootPath());
         }
     }

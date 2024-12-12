@@ -32,7 +32,6 @@ public class UrlChecksController {
             String h1 = document.select("h1").text();
             String description = document.select("meta[name=description]").attr("content");
 
-            // Сохраняем результаты проверки URL
             UrlCheckRepository.save(UrlCheck.builder()
                     .statusCode(statusCode)
                     .title(title)
@@ -42,7 +41,6 @@ public class UrlChecksController {
                     .urlId(urlId)
                     .build());
 
-            // Успешное сообщение
             context.sessionAttribute("flash", "Страница успешно проверена");
             context.sessionAttribute("flashType", "success");
 
@@ -57,9 +55,8 @@ public class UrlChecksController {
             context.sessionAttribute("flashType", "danger");
         }
 
-        // Перенаправляем пользователя
         context.redirect(NamedRoutes.urlPath(urlId));
-        Unirest.shutDown(); // Закрываем Unirest
+        Unirest.shutDown();
     }
 }
 
