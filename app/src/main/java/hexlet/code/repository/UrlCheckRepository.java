@@ -71,14 +71,15 @@ public class UrlCheckRepository extends BaseRepository {
         String sql = "SELECT url_id, status_code, created_at FROM url_checks ORDER BY created_at";
         try (var connection = dataSource.getConnection();
              var preparedStatement = connection.prepareStatement(sql)) {
-
             var resultSet = preparedStatement.executeQuery();
+
             var result = new HashMap<Long, UrlCheck>();
 
             while (resultSet.next()) {
                 var urlId = resultSet.getLong("url_id");
                 var statusCode = resultSet.getInt("status_code");
                 var createdAt = resultSet.getTimestamp("created_at").toLocalDateTime();
+
                 result.put(urlId, new UrlCheck(statusCode, createdAt));
             }
             return result;

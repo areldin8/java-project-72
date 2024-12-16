@@ -9,9 +9,7 @@ import hexlet.code.repository.UrlRepository;
 import hexlet.code.util.NamedRoutes;
 import io.javalin.http.Context;
 
-import java.net.MalformedURLException;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.sql.SQLException;
 
@@ -71,43 +69,30 @@ public class UrlsController {
     }
 
     public static void create(Context context) {
-        String link = context.formParamAsClass("url", String.class).get();
-
-        if (link.isEmpty()) {
-            context.sessionAttribute("flash", "Ссылка не может быть пустой");
-            context.redirect(NamedRoutes.rootPath());
-            return;
-        }
-        link = link.toLowerCase().trim();
+        String link = context.formParamAsClass("url", String.class).get().toLowerCase().trim();
         context.sessionAttribute("link", link);
         try {
             URL linkUrl = new URI(link).toURL();
             link = linkUrl.getProtocol() + "://" + linkUrl.getHost()
                     + (linkUrl.getPort() != -1 ? ":" + linkUrl.getPort() : "");
-        } catch (URISyntaxException | MalformedURLException e) {
-            context.sessionAttribute("flash", "Неверный формат ссылки");
-            context.redirect(NamedRoutes.rootPath());
-            return;
-        }
-        try {
-            // Проверка на существование ссылки
             if (UrlRepository.findByName(link).isPresent()) {
                 context.sessionAttribute("flash", "Ссылка уже содержится");
                 context.redirect(NamedRoutes.rootPath());
-                return;
+            } else {
+                UrlRepository.save(new Url(link));
+                context.sessionAttribute("flash", "Ссылка успешно добавлена");
+                context.consumeSessionAttribute("link");
+                context.redirect(NamedRoutes.urlsPath());
             }
-            UrlRepository.save(new Url(link));
-            context.sessionAttribute("flash", "Ссылка успешно добавлена");
-            context.consumeSessionAttribute("link");
-            context.redirect(NamedRoutes.urlsPath());
         } catch (SQLException e) {
             context.sessionAttribute("flash", "Ошибка в работе СУБД");
             context.redirect(NamedRoutes.rootPath());
         } catch (Exception e) {
-            context.sessionAttribute("flash", "Произошла ошибка: " + e.getMessage());
+            context.sessionAttribute("flash", "Неверная ссылка");
             context.redirect(NamedRoutes.rootPath());
         }
     }
+
 }
 
 
