@@ -144,9 +144,7 @@ public class AppTest {
             assertThat(checks).isNotEmpty();
 
             UrlCheck check = checks.get(0);
-            assertThat(check.getTitle()).isNotNull();
             assertThat(check.getTitle()).isEqualTo("Test Title");
-            assertThat(check.getH1()).isNotNull();
             assertThat(check.getH1()).isEqualTo("Test header");
             assertThat(check.getDescription()).isEqualTo(null);
         });

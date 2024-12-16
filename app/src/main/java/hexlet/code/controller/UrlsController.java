@@ -56,12 +56,15 @@ public class UrlsController {
 
             page.setFlash(context.consumeSessionAttribute("flash"));
             context.render("urls/show.jte", model("page", page));
+        } catch (NotFoundResponse e) {
+            context.sessionAttribute("flash", "URL не найден" + e.getMessage());
+            context.redirect(NamedRoutes.rootPath());
         } catch (SQLException e) {
             context.sessionAttribute("flash", "Ошибка в работе СУБД: " + e.getMessage());
             page.setFlash(context.consumeSessionAttribute("flash"));
             context.render("urls/show.jte", model("page", page));
         } catch (Exception e) {
-            context.sessionAttribute("flash", "Указан несуществующий id");
+            context.sessionAttribute("flash", "Произошла ошибка: " + e.getMessage());
             page.setFlash(context.consumeSessionAttribute("flash"));
             context.render("urls/show.jte", model("page", page));
         }
@@ -75,12 +78,8 @@ public class UrlsController {
             URL linkUrl = new URI(link).toURL();
             link = linkUrl.getProtocol() + "://" + linkUrl.getHost()
                     + (linkUrl.getPort() != -1 ? ":" + linkUrl.getPort() : "");
-        } catch (URISyntaxException e) {
+        } catch (URISyntaxException | MalformedURLException e) {
             context.sessionAttribute("flash", "Неверный формат ссылки");
-            context.redirect(NamedRoutes.rootPath());
-            return;
-        } catch (MalformedURLException e) {
-            context.sessionAttribute("flash", "Неверная ссылка");
             context.redirect(NamedRoutes.rootPath());
             return;
         }
@@ -98,7 +97,7 @@ public class UrlsController {
             context.sessionAttribute("flash", "Ошибка в работе СУБД");
             context.redirect(NamedRoutes.rootPath());
         } catch (Exception e) {
-            context.sessionAttribute("flash", "Произошла ошибка");
+            context.sessionAttribute("flash", "Произошла ошибка" + e.getMessage());
             context.redirect(NamedRoutes.rootPath());
         }
     }
