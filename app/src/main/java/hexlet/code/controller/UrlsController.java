@@ -9,7 +9,9 @@ import hexlet.code.repository.UrlRepository;
 import hexlet.code.util.NamedRoutes;
 import io.javalin.http.Context;
 
+import java.net.MalformedURLException;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.sql.SQLException;
 
@@ -71,24 +73,30 @@ public class UrlsController {
     public static void create(Context context) {
         String link = context.formParamAsClass("url", String.class).get().toLowerCase().trim();
         context.sessionAttribute("link", link);
+
         try {
             URL linkUrl = new URI(link).toURL();
             link = linkUrl.getProtocol() + "://" + linkUrl.getHost()
                     + (linkUrl.getPort() != -1 ? ":" + linkUrl.getPort() : "");
+
             if (UrlRepository.findByName(link).isPresent()) {
                 context.sessionAttribute("flash", "Ссылка уже содержится");
                 context.redirect(NamedRoutes.rootPath());
-            } else {
-                UrlRepository.save(new Url(link));
-                context.sessionAttribute("flash", "Ссылка успешно добавлена");
-                context.consumeSessionAttribute("link");
-                context.redirect(NamedRoutes.urlsPath());
+                return;
             }
+            UrlRepository.save(new Url(link));
+            context.sessionAttribute("flash", "Ссылка успешно добавлена");
+            context.consumeSessionAttribute("link");
+            context.redirect(NamedRoutes.urlsPath());
+
+        } catch (MalformedURLException | URISyntaxException e) {
+            context.sessionAttribute("flash", "Неверная ссылка");
+            context.redirect(NamedRoutes.rootPath());
         } catch (SQLException e) {
             context.sessionAttribute("flash", "Ошибка в работе СУБД");
             context.redirect(NamedRoutes.rootPath());
         } catch (Exception e) {
-            context.sessionAttribute("flash", "Неверная ссылка");
+            context.sessionAttribute("flash", "Произошла ошибка");
             context.redirect(NamedRoutes.rootPath());
         }
     }
