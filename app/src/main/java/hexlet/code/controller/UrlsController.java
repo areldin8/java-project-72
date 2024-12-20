@@ -30,6 +30,7 @@ public class UrlsController {
         context.render("build.jte", model("page", page));
     }
 
+
     public static void index(Context context) {
         UrlsPage page = new UrlsPage();
         try {
@@ -89,14 +90,17 @@ public class UrlsController {
             context.consumeSessionAttribute("link");
             context.redirect(NamedRoutes.urlsPath());
 
-        } catch (MalformedURLException | URISyntaxException e) {
-            context.sessionAttribute("flash", "Неверная ссылка");
+        } catch (MalformedURLException e) {
+            context.sessionAttribute("flash", "Неверная ссылка: неверный формат URL");
+            context.redirect(NamedRoutes.rootPath());
+        } catch (URISyntaxException e) {
+            context.sessionAttribute("flash", "Неверная ссылка: неверный синтаксис URI");
             context.redirect(NamedRoutes.rootPath());
         } catch (SQLException e) {
             context.sessionAttribute("flash", "Ошибка в работе СУБД");
             context.redirect(NamedRoutes.rootPath());
         } catch (Exception e) {
-            context.sessionAttribute("flash", "Произошла ошибка");
+            context.sessionAttribute("flash", "Произошла ошибка: " + e.getMessage());
             context.redirect(NamedRoutes.rootPath());
         }
     }
