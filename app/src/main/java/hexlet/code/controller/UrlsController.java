@@ -83,7 +83,6 @@ public class UrlsController {
             context.sessionAttribute("flash",
                     "Неверная ссылка: допустимы только буквы, цифры, точки и символы / : ? # &");
             context.redirect(NamedRoutes.rootPath());
-            return; // Не выполняем редирект, просто возвращаем
         }
 
         try {
