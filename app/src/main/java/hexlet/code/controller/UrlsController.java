@@ -10,9 +10,7 @@ import hexlet.code.repository.UrlRepository;
 import hexlet.code.util.NamedRoutes;
 import io.javalin.http.Context;
 
-import java.net.MalformedURLException;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.sql.SQLException;
 
@@ -76,46 +74,32 @@ public class UrlsController {
     }
 
     public static void create(Context context) {
-        String rawLink = context.formParamAsClass("url", String.class).get().toLowerCase().trim();
-        context.sessionAttribute("link", rawLink);
-
-        if (!isValidUrl(rawLink)) {
-            context.sessionAttribute("flash",
-                    "Неверная ссылка: допустимы только буквы, цифры, точки и символы / : ? # &");
-            return; // Просто возвращаем, чтобы избежать редиректа
-        }
+        String link = context.formParamAsClass("url", String.class).get().toLowerCase().trim();
+        context.sessionAttribute("link", link);
 
         try {
-            // Преобразуем строку в URL
-            URL linkUrl = new URI(rawLink).toURL();
-            rawLink = linkUrl.getProtocol() + "://" + linkUrl.getHost()
+            URL linkUrl = new URI(link).toURL();
+            link = linkUrl.getProtocol() + "://" + linkUrl.getHost()
                     + (linkUrl.getPort() != -1 ? ":" + linkUrl.getPort() : "");
 
-            // Проверяем, существует ли ссылка в репозитории
-            if (UrlRepository.findByName(rawLink).isPresent()) {
+            if (UrlRepository.findByName(link).isPresent()) {
                 context.sessionAttribute("flash", "Ссылка уже содержится");
                 context.redirect(NamedRoutes.rootPath());
                 return; // Возвращаемся, чтобы избежать вложенности
             }
 
-            UrlRepository.save(new Url(rawLink));
+            UrlRepository.save(new Url(link));
             context.sessionAttribute("flash", "Ссылка успешно добавлена");
             context.consumeSessionAttribute("link");
             context.redirect(NamedRoutes.urlsPath());
 
-        } catch (URISyntaxException | MalformedURLException e) {
-            context.sessionAttribute("flash", "Неверная ссылка");
-            context.redirect(NamedRoutes.rootPath());
         } catch (SQLException e) {
             context.sessionAttribute("flash", "Ошибка в работе СУБД");
             context.redirect(NamedRoutes.rootPath());
+        } catch (Exception e) {
+            context.sessionAttribute("flash", "Неверная ссылка");
+            context.redirect(NamedRoutes.rootPath());
         }
-    }
-
-    // Метод для проверки допустимости URL
-    private static boolean isValidUrl(String url) {
-        // Регулярное выражение для проверки допустимых символов
-        return url.matches("^[a-zA-Z0-9:/?.#&=]+$");
     }
 
 }
