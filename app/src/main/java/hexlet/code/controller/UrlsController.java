@@ -87,28 +87,25 @@ public class UrlsController {
 
         try {
             URL linkUrl = new URI(rawLink).toURL();
-            String formattedLink = linkUrl.getProtocol() + "://" + linkUrl.getHost()
+            rawLink = linkUrl.getProtocol() + "://" + linkUrl.getHost()
                     + (linkUrl.getPort() != -1 ? ":" + linkUrl.getPort() : "");
 
-            if (UrlRepository.findByName(formattedLink).isPresent()) {
+            if (UrlRepository.findByName(rawLink).isPresent()) {
                 context.sessionAttribute("flash", "Ссылка уже содержится");
                 context.redirect(NamedRoutes.rootPath());
-                return; // Возвращаемся, чтобы избежать вложенности
+                return;
             }
 
-            UrlRepository.save(new Url(formattedLink));
+            UrlRepository.save(new Url(rawLink));
             context.sessionAttribute("flash", "Ссылка успешно добавлена");
             context.consumeSessionAttribute("link");
             context.redirect(NamedRoutes.urlsPath());
 
         } catch (URISyntaxException | MalformedURLException e) {
-            context.sessionAttribute("flash", "Неверная ссылка: неверный формат URL");
-            // Не выполняем редирект, просто возвращаем
+            context.sessionAttribute("flash", "Неверная ссылка");
+            context.redirect(NamedRoutes.rootPath());
         } catch (SQLException e) {
             context.sessionAttribute("flash", "Ошибка в работе СУБД");
-            context.redirect(NamedRoutes.rootPath());
-        } catch (Exception e) {
-            context.sessionAttribute("flash", "Произошла ошибка");
             context.redirect(NamedRoutes.rootPath());
         }
     }
