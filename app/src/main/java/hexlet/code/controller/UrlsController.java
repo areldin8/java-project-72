@@ -82,18 +82,20 @@ public class UrlsController {
         if (!isValidUrl(rawLink)) {
             context.sessionAttribute("flash",
                     "Неверная ссылка: допустимы только буквы, цифры, точки и символы / : ? # &");
-            context.redirect(NamedRoutes.rootPath());
+            return; // Просто возвращаем, чтобы избежать редиректа
         }
 
         try {
+            // Преобразуем строку в URL
             URL linkUrl = new URI(rawLink).toURL();
             rawLink = linkUrl.getProtocol() + "://" + linkUrl.getHost()
                     + (linkUrl.getPort() != -1 ? ":" + linkUrl.getPort() : "");
 
+            // Проверяем, существует ли ссылка в репозитории
             if (UrlRepository.findByName(rawLink).isPresent()) {
                 context.sessionAttribute("flash", "Ссылка уже содержится");
                 context.redirect(NamedRoutes.rootPath());
-                return;
+                return; // Возвращаемся, чтобы избежать вложенности
             }
 
             UrlRepository.save(new Url(rawLink));
@@ -110,6 +112,7 @@ public class UrlsController {
         }
     }
 
+    // Метод для проверки допустимости URL
     private static boolean isValidUrl(String url) {
         // Регулярное выражение для проверки допустимых символов
         return url.matches("^[a-zA-Z0-9:/?.#&=]+$");
