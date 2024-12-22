@@ -10,9 +10,7 @@ import hexlet.code.repository.UrlRepository;
 import hexlet.code.util.NamedRoutes;
 import io.javalin.http.Context;
 
-import java.net.MalformedURLException;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.sql.SQLException;
 
@@ -89,7 +87,6 @@ public class UrlsController {
                 context.redirect(NamedRoutes.rootPath());
                 return; // Возвращаемся, чтобы избежать вложенности
             }
-
             UrlRepository.save(new Url(link));
             context.sessionAttribute("flash", "Ссылка успешно добавлена");
             context.consumeSessionAttribute("link");
@@ -98,7 +95,7 @@ public class UrlsController {
         } catch (SQLException e) {
             context.sessionAttribute("flash", "Ошибка в работе СУБД");
             context.redirect(NamedRoutes.rootPath());
-        } catch (URISyntaxException | MalformedURLException e) {
+        } catch (Exception e) {
             context.sessionAttribute("flash", "Неверная ссылка");
             context.redirect(NamedRoutes.rootPath());
         }
