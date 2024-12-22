@@ -4,6 +4,7 @@ import hexlet.code.dto.LinkPage;
 import hexlet.code.dto.UrlPage;
 import hexlet.code.dto.UrlsPage;
 import hexlet.code.model.Url;
+import hexlet.code.model.UrlCheck;
 import hexlet.code.repository.UrlCheckRepository;
 import hexlet.code.repository.UrlRepository;
 import hexlet.code.util.NamedRoutes;
@@ -36,9 +37,12 @@ public class UrlsController {
         try {
             page.setUrls(UrlRepository.getEntities());
             var lastChecks = UrlCheckRepository.getLastChecks();
-            Map<Long, Integer> lastStatus = lastChecks.entrySet().stream()
-                    .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().getStatusCode()));
-            page.setLastStatus(lastStatus);
+            Map<Long, UrlCheck> lastStatus = lastChecks.entrySet().stream()
+                    .collect(Collectors.toMap(
+                            Map.Entry::getKey,
+                            Map.Entry::getValue
+                            ));
+            page.setUrlChecks(lastStatus);
 
             context.render("urls/index.jte", model("page", page));
         } catch (SQLException e) {

@@ -35,17 +35,17 @@ content = @`
                                 <td>${url.getName()}</td>
                                 <td>${Utils.formatDate(url.getCreatedAt())}</td>
                                 <td>
-                                    @if (page.getLastChecks().get(url.getId()) == null)
+                                    @if (page.getUrlChecks().get(url.getId()) == null)
                                         <span class="text-muted">Проверок не было</span>
                                     @else
-                                        ${page.getLastChecks().get(url.getId()).toString()}
+                                        ${page.getUrlChecks().get(url.getId()).toString()}
                                     @endif
                                 </td>
                                 <td>
-                                    @if (page.getLastStatus().get(url.getId()) == null)
+                                    @if (page.getUrlChecks().get(url.getId()) == null)
                                         <span class="text-muted">Проверок не было</span>
                                     @else
-                                        ${page.getLastStatus().get(url.getId()).toString()}
+                                        ${page.getUrlChecks().get(url.getId()).toString()}
                                     @endif
                                 </td>
                             </tr>
