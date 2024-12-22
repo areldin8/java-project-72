@@ -87,24 +87,22 @@ public class UrlsController {
             if (UrlRepository.findByName(link).isPresent()) {
                 context.sessionAttribute("flash", "Ссылка уже содержится");
                 context.redirect(NamedRoutes.rootPath());
-                return;
+                return; // Возвращаемся, чтобы избежать вложенности
             }
+
             UrlRepository.save(new Url(link));
             context.sessionAttribute("flash", "Ссылка успешно добавлена");
             context.consumeSessionAttribute("link");
             context.redirect(NamedRoutes.urlsPath());
 
-        } catch (MalformedURLException e) {
-            context.sessionAttribute("flash", "Неверная ссылка: неверный формат URL");
-            context.redirect(NamedRoutes.rootPath());
-        } catch (URISyntaxException e) {
-            context.sessionAttribute("flash", "Неверная ссылка: неверный синтаксис URI");
+        } catch (URISyntaxException | MalformedURLException e) {
+            context.sessionAttribute("flash", "Неверная ссылка");
             context.redirect(NamedRoutes.rootPath());
         } catch (SQLException e) {
             context.sessionAttribute("flash", "Ошибка в работе СУБД");
             context.redirect(NamedRoutes.rootPath());
         } catch (Exception e) {
-            context.sessionAttribute("flash", "Произошла ошибка: " + e.getMessage());
+            context.sessionAttribute("flash", "Произошла ошибка");
             context.redirect(NamedRoutes.rootPath());
         }
     }
