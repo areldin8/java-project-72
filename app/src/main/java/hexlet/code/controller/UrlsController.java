@@ -76,28 +76,34 @@ public class UrlsController {
     }
 
     public static void create(Context context) {
-        String link = context.formParamAsClass("url", String.class).get().toLowerCase().trim();
-        context.sessionAttribute("link", link);
+        String rawLink = context.formParamAsClass("url", String.class).get().toLowerCase().trim();
+        context.sessionAttribute("link", rawLink);
+
+        if (!isValidUrl(rawLink)) {
+            context.sessionAttribute("flash",
+                    "Неверная ссылка: допустимы только буквы, цифры, точки и символы / : ? # &");
+            return; // Не выполняем редирект, просто возвращаем
+        }
 
         try {
-            URL linkUrl = new URI(link).toURL();
-            link = linkUrl.getProtocol() + "://" + linkUrl.getHost()
+            URL linkUrl = new URI(rawLink).toURL();
+            String formattedLink = linkUrl.getProtocol() + "://" + linkUrl.getHost()
                     + (linkUrl.getPort() != -1 ? ":" + linkUrl.getPort() : "");
 
-            if (UrlRepository.findByName(link).isPresent()) {
+            if (UrlRepository.findByName(formattedLink).isPresent()) {
                 context.sessionAttribute("flash", "Ссылка уже содержится");
                 context.redirect(NamedRoutes.rootPath());
                 return; // Возвращаемся, чтобы избежать вложенности
             }
 
-            UrlRepository.save(new Url(link));
+            UrlRepository.save(new Url(formattedLink));
             context.sessionAttribute("flash", "Ссылка успешно добавлена");
             context.consumeSessionAttribute("link");
             context.redirect(NamedRoutes.urlsPath());
 
         } catch (URISyntaxException | MalformedURLException e) {
-            context.sessionAttribute("flash", "Неверная ссылка");
-            context.redirect(NamedRoutes.rootPath());
+            context.sessionAttribute("flash", "Неверная ссылка: неверный формат URL");
+            // Не выполняем редирект, просто возвращаем
         } catch (SQLException e) {
             context.sessionAttribute("flash", "Ошибка в работе СУБД");
             context.redirect(NamedRoutes.rootPath());
@@ -105,6 +111,11 @@ public class UrlsController {
             context.sessionAttribute("flash", "Произошла ошибка");
             context.redirect(NamedRoutes.rootPath());
         }
+    }
+
+    private static boolean isValidUrl(String url) {
+        // Регулярное выражение для проверки допустимых символов
+        return url.matches("^[a-zA-Z0-9:/?.#&=]+$");
     }
 
 }
