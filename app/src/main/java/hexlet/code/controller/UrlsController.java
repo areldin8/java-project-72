@@ -11,6 +11,7 @@ import hexlet.code.util.NamedRoutes;
 import io.javalin.http.Context;
 
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.sql.SQLException;
 
@@ -78,6 +79,9 @@ public class UrlsController {
         context.sessionAttribute("link", link);
 
         try {
+            // Проверка на корректность URL
+            new URI(link); // Это выбросит исключение, если URL некорректный
+
             URL linkUrl = new URI(link).toURL();
             link = linkUrl.getProtocol() + "://" + linkUrl.getHost()
                     + (linkUrl.getPort() != -1 ? ":" + linkUrl.getPort() : "");
@@ -93,11 +97,14 @@ public class UrlsController {
             context.consumeSessionAttribute("link");
             context.redirect(NamedRoutes.urlsPath());
 
+        } catch (URISyntaxException e) {
+            context.sessionAttribute("flash", "Неверная ссылка"); // Обработка некорректного URL
+            context.redirect(NamedRoutes.rootPath());
         } catch (SQLException e) {
             context.sessionAttribute("flash", "Ошибка в работе СУБД");
             context.redirect(NamedRoutes.rootPath());
         } catch (Exception e) {
-            context.sessionAttribute("flash", "Неверная ссылка");
+            context.sessionAttribute("flash", "Произошла ошибка");
             context.redirect(NamedRoutes.rootPath());
         }
     }
