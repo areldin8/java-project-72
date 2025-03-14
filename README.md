@@ -8,4 +8,9 @@
 
 ### **Ссылка на приложение**
 
-https://java-project-72-f4b2.onrender.com
+https://java-project-72-f4b2.onrender.com - сайт, который анализирует указанные страницы на SEO пригодность.
+
+![1](app/src/main/resources/pictures/main.png)
+![2](app/src/main/resources/pictures/a.png)
+![3](app/src/main/resources/pictures/b.png)
+![4](app/src/main/resources/pictures/c.png)
